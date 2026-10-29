@@ -1,57 +1,76 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchDolarRates } from "../api/client";
 
 export default function DolarTicker() {
   const [rates, setRates] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState("");
   useEffect(() => {
-    fetchDolarRates()
-      .then((data) => {
-        setRates(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error cargando dólares:", err);
-        setLoading(false);
-      });
+    let alive = true,
+      pending = false;
+    async function load() {
+      if (pending) return;
+      pending = true;
+      try {
+        const data = await fetchDolarRates();
+        if (alive) {
+          setRates(data);
+          setError("");
+        }
+      } catch (err) {
+        if (alive) setError(err.message);
+      } finally {
+        pending = false;
+      }
+    }
+    load();
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 60000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
   }, []);
-
-  if (loading || !rates) {
-    return (
-      <div className="bg-slate-800 text-slate-300 text-xs py-2 px-4 flex gap-4 overflow-x-auto border-b border-slate-700">
-        <span>Cargando cotizaciones de Argentina...</span>
-      </div>
-    );
-  }
-
   const items = [
-    { label: "Dólar Oficial", key: "oficial" },
-    { label: "Dólar MEP (Bolsa)", key: "bolsa" },
-    { label: "Dólar CCL", key: "contadoconliqui" },
-    { label: "Dólar Blue", key: "blue" },
-    { label: "Cripto", key: "cripto" },
+    ["Oficial", "oficial"],
+    ["MEP", "bolsa"],
+    ["CCL", "contadoconliqui"],
+    ["Blue", "blue"],
+    ["Cripto", "cripto"],
   ];
-
   return (
-    <div className="bg-slate-900 border-b border-slate-800 text-xs py-2 px-6 flex items-center gap-6 overflow-x-auto text-slate-400">
-      <span className="font-semibold text-emerald-400 flex items-center gap-1">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        Cotizaciones Dólar (dolarapi.com):
+    <div className="bg-slate-900 border-b border-slate-800 text-xs py-2 px-6 flex gap-6 overflow-x-auto text-slate-300">
+      <span className="text-emerald-400 whitespace-nowrap">
+        Dólar · DolarAPI · consulta cada 60 s
       </span>
-      {items.map(({ label, key }) => {
-        const item = rates[key];
-        if (!item) return null;
-        return (
-          <div key={key} className="flex gap-2 items-center whitespace-nowrap">
-            <span className="font-medium text-slate-300">{label}:</span>
-            <span className="text-white font-mono">
-              ${item.venta || item.compra || "-"}
+      {!rates && !error && <span>Cargando…</span>}
+      {items.map(
+        ([label, key]) =>
+          rates?.[key] && (
+            <span
+              key={key}
+              className="whitespace-nowrap"
+              title={`Fecha del proveedor: ${rates[key].fechaActualizacion || "No informada"}`}
+            >
+              {label}: ${rates[key].venta ?? "—"}
+              <small className="text-slate-500 ml-2">
+                {rates[key].fechaActualizacion
+                  ? new Date(rates[key].fechaActualizacion).toLocaleString(
+                      "es-AR",
+                    )
+                  : "Sin fecha"}
+              </small>
             </span>
-          </div>
-        );
-      })}
+          ),
+      )}
+      {error && (
+        <span role="alert" className="text-amber-300">
+          {error}
+          {rates
+            ? " Se muestran las últimas cotizaciones recibidas; pueden estar desactualizadas."
+            : ""}
+        </span>
+      )}
     </div>
   );
 }
-

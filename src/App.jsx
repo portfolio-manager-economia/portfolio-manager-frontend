@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from "react";
+﻿import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  lazy,
+  Suspense,
+} from "react";
 import {
   Briefcase,
   TrendingUp,
@@ -9,15 +16,17 @@ import {
   CheckCircle2,
   AlertCircle,
   PlusCircle,
-  XCircle,
   Sparkles,
 } from "lucide-react";
 
 import DolarTicker from "./components/DolarTicker";
 import PositionsTable from "./components/PositionsTable";
 import AddPositionModal from "./components/AddPositionModal";
-import EfficientFrontierChart from "./components/EfficientFrontierChart";
+const EfficientFrontierChart = lazy(
+  () => import("./components/EfficientFrontierChart"),
+);
 import OptimalPortfoliosCard from "./components/OptimalPortfoliosCard";
+import PortfolioComparison from "./components/PortfolioComparison";
 import { ASSET_CATALOG, PRESET_PORTFOLIOS } from "./data/assets";
 
 import {
@@ -34,36 +43,59 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Estado del Optimizador
-  const [selectedTickers, setSelectedTickers] = useState(["AAPL", "MSFT", "GOOGL", "GGAL.BA"]);
+  const [selectedTickers, setSelectedTickers] = useState([
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "GGAL.BA",
+  ]);
   const [riskFreeRate, setRiskFreeRate] = useState("0.04");
   const [period, setPeriod] = useState("1y");
   const [optimizing, setOptimizing] = useState(false);
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [optError, setOptError] = useState("");
   const [catalogFilter, setCatalogFilter] = useState("TODOS");
+  const [positionsError, setPositionsError] = useState("");
+  const [positionsUpdatedAt, setPositionsUpdatedAt] = useState(null);
+  const loadingRef = useRef(false);
+  const optimizationRef = useRef(false);
+  const [compareCurrent, setCompareCurrent] = useState(false);
 
-  const loadPositions = async () => {
+  const loadPositions = useCallback(async (refresh = false) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setLoadingPositions(true);
     try {
-      const data = await fetchPositions();
+      const data = await fetchPositions(refresh);
       setPositions(data);
+      setPositionsError("");
+      setPositionsUpdatedAt(new Date());
     } catch (err) {
-      console.error("Error al cargar posiciones:", err);
+      setPositionsError(err.message);
     } finally {
       setLoadingPositions(false);
+      loadingRef.current = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadPositions();
-  }, []);
+    const initial = setTimeout(() => loadPositions(), 0);
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") loadPositions();
+    }, 60000);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(timer);
+    };
+  }, [loadPositions]);
 
   const handleAddPosition = async (newPos) => {
     try {
       await createPosition(newPos);
+      setOptimizationResult(null);
       await loadPositions();
     } catch (err) {
-      alert("Error al agregar la posición: " + err.message);
+      throw new Error("Error al agregar la posición: " + err.message);
     }
   };
 
@@ -71,6 +103,7 @@ export default function App() {
     if (!window.confirm("¿Seguro que deseás eliminar este activo?")) return;
     try {
       await deletePosition(id);
+      setOptimizationResult(null);
       await loadPositions();
     } catch (err) {
       alert("Error al eliminar la posición: " + err.message);
@@ -78,6 +111,7 @@ export default function App() {
   };
 
   const toggleTicker = (ticker) => {
+    setOptimizationResult(null);
     if (selectedTickers.includes(ticker)) {
       setSelectedTickers(selectedTickers.filter((t) => t !== ticker));
     } else {
@@ -86,41 +120,65 @@ export default function App() {
   };
 
   const handleApplyPreset = (tickers) => {
+    setOptimizationResult(null);
+    setCompareCurrent(false);
     setSelectedTickers(tickers);
   };
 
   const handleLoadMyPortfolio = () => {
-    if (positions.length < 2) {
+    if (portfolioTickers.length < 2) {
       alert("Tenés menos de 2 activos registrados en tu cartera.");
       return;
     }
     const myTickers = Array.from(new Set(positions.map((p) => p.ticker)));
     setSelectedTickers(myTickers);
+    setCompareCurrent(true);
+    setOptimizationResult(null);
   };
 
-  const handleRunOptimization = async (customList = null) => {
+  const handleRunOptimization = async (
+    customList = null,
+    compare = compareCurrent,
+  ) => {
+    if (optimizationRef.current) return;
     const listToRun = customList || selectedTickers;
+    setActiveTab("optimizer");
     if (listToRun.length < 2) {
-      setOptError("Por favor seleccioná al menos 2 activos distintos para calcular la frontera eficiente.");
+      setOptError(
+        "Por favor seleccioná al menos 2 activos distintos para calcular la frontera eficiente.",
+      );
       return;
     }
 
     setOptError("");
+    setOptimizationResult(null);
+    setActiveTab("optimizer");
+    optimizationRef.current = true;
     setOptimizing(true);
     try {
-      const rf = parseFloat(riskFreeRate) || 0.04;
-      const res = await optimizePortfolio(listToRun, rf, period);
+      const rf = Number(riskFreeRate);
+      if (riskFreeRate === "" || !Number.isFinite(rf) || rf < 0 || rf > 1)
+        throw new Error("Ingresá una tasa entre 0 y 1.");
+      const res = await optimizePortfolio(listToRun, rf, period, compare);
       setOptimizationResult(res);
       setActiveTab("optimizer");
     } catch (err) {
-      setOptError(err.message || "Error al procesar la optimización de Markowitz.");
+      setOptError(
+        err.message || "Error al procesar la optimización de Markowitz.",
+      );
     } finally {
       setOptimizing(false);
+      optimizationRef.current = false;
     }
   };
 
+  const portfolioTickers = Array.from(new Set(positions.map((p) => p.ticker)));
+
   // Filtrado del catálogo
-  const categories = ["TODOS", ...Array.from(new Set(ASSET_CATALOG.map((a) => a.category)))];
+  const categories = [
+    "TODOS",
+    ...Array.from(new Set(ASSET_CATALOG.map((a) => a.category))),
+  ];
   const filteredCatalog =
     catalogFilter === "TODOS"
       ? ASSET_CATALOG
@@ -139,7 +197,9 @@ export default function App() {
               <TrendingUp className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white m-0">Portfolio Manager</h1>
+              <h1 className="text-xl font-bold tracking-tight text-white m-0">
+                Portfolio Manager
+              </h1>
               <p className="text-xs text-slate-400 m-0">
                 Modelo Cuantitativo de Markowitz • Finanzas y Economía
               </p>
@@ -192,26 +252,36 @@ export default function App() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Seguimiento de Cartera</h2>
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  Seguimiento de Cartera
+                </h2>
                 <p className="text-sm text-slate-400">
-                  Control en tiempo real de tus posiciones, valuación de mercado y rentabilidad acumulada.
+                  Valuación en USD al dólar MEP y rentabilidad acumulada.
+                  Actualización automática cada 60 segundos; los precios pueden
+                  tener demora del proveedor.
                 </p>
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={loadPositions}
+                  onClick={() => loadPositions(true)}
                   disabled={loadingPositions}
                   className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-colors"
                 >
-                  <RefreshCw size={14} className={loadingPositions ? "animate-spin" : ""} />
+                  <RefreshCw
+                    size={14}
+                    className={loadingPositions ? "animate-spin" : ""}
+                  />
                   Actualizar Cotizaciones
                 </button>
-                {positions.length >= 2 && (
+                {portfolioTickers.length >= 2 && (
                   <button
                     onClick={() => {
-                      const myTickers = Array.from(new Set(positions.map((p) => p.ticker)));
+                      const myTickers = Array.from(
+                        new Set(positions.map((p) => p.ticker)),
+                      );
                       setSelectedTickers(myTickers);
-                      handleRunOptimization(myTickers);
+                      setCompareCurrent(true);
+                      handleRunOptimization(myTickers, true);
                     }}
                     className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 transition-all active:scale-95"
                   >
@@ -222,6 +292,19 @@ export default function App() {
               </div>
             </div>
 
+            {positionsError && (
+              <p role="alert" className="text-rose-300">
+                {positionsError}. Los datos visibles pueden estar
+                desactualizados.
+              </p>
+            )}
+            {positionsUpdatedAt && (
+              <p className="text-xs text-slate-400">
+                Última consulta:{" "}
+                {positionsUpdatedAt.toLocaleTimeString("es-AR")}. Cada posición
+                indica la fecha de su cotización.
+              </p>
+            )}
             <PositionsTable
               positions={positions}
               onDelete={handleDeletePosition}
@@ -234,7 +317,10 @@ export default function App() {
         {activeTab === "optimizer" && (
           <div className="space-y-8">
             {/* Panel de Configuración de la Optimización */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <fieldset
+              disabled={optimizing}
+              className="min-w-0 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6"
+            >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -242,11 +328,12 @@ export default function App() {
                     Selección de Activos para la Frontera Eficiente
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Elegí los activos de la lista oficial de Yahoo Finance para evitar errores de tipeo.
+                    Elegí activos del catálogo. La disponibilidad de cada
+                    cotización depende del proveedor.
                   </p>
                 </div>
 
-                {positions.length >= 2 && (
+                {portfolioTickers.length >= 2 && (
                   <button
                     onClick={handleLoadMyPortfolio}
                     className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition-all"
@@ -266,6 +353,7 @@ export default function App() {
                   {PRESET_PORTFOLIOS.map((p) => (
                     <button
                       key={p.name}
+                      disabled={optimizing}
                       onClick={() => handleApplyPreset(p.tickers)}
                       className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-slate-500 transition-colors"
                     >
@@ -283,7 +371,10 @@ export default function App() {
                   </label>
                   {selectedTickers.length > 0 && (
                     <button
-                      onClick={() => setSelectedTickers([])}
+                      onClick={() => {
+                        setSelectedTickers([]);
+                        setOptimizationResult(null);
+                      }}
                       className="text-[11px] text-rose-400 hover:underline"
                     >
                       Limpiar selección
@@ -293,19 +384,26 @@ export default function App() {
 
                 {selectedTickers.length === 0 ? (
                   <p className="text-xs text-amber-400 font-medium py-2">
-                    ⚠️ No hay activos seleccionados. Hacé clic en los botones de abajo para sumar al menos 2.
+                    ⚠️ No hay activos seleccionados. Hacé clic en los botones de
+                    abajo para sumar al menos 2.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {selectedTickers.map((ticker) => {
-                      const found = ASSET_CATALOG.find((a) => a.ticker === ticker);
+                      const found = ASSET_CATALOG.find(
+                        (a) => a.ticker === ticker,
+                      );
                       return (
                         <span
                           key={ticker}
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shadow-sm"
                         >
                           {ticker}
-                          {found && <span className="font-sans font-normal text-slate-400 text-[10px]">({found.name.split(" ")[0]})</span>}
+                          {found && (
+                            <span className="font-sans font-normal text-slate-400 text-[10px]">
+                              ({found.name.split(" ")[0]})
+                            </span>
+                          )}
                           <button
                             onClick={() => toggleTicker(ticker)}
                             className="text-slate-400 hover:text-rose-400 ml-1"
@@ -324,7 +422,8 @@ export default function App() {
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Catálogo de Activos Disponibles (hacé clic para sumar/quitar):
+                    Catálogo de Activos Disponibles (hacé clic para
+                    sumar/quitar):
                   </label>
 
                   {/* Filtro por categoría */}
@@ -359,13 +458,23 @@ export default function App() {
                         }`}
                       >
                         <div className="truncate pr-1">
-                          <div className="font-mono font-bold text-xs">{asset.ticker}</div>
-                          <div className="text-[11px] text-slate-400 truncate">{asset.name}</div>
+                          <div className="font-mono font-bold text-xs">
+                            {asset.ticker}
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate">
+                            {asset.name}
+                          </div>
                         </div>
                         {isSelected ? (
-                          <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                          <CheckCircle2
+                            size={16}
+                            className="text-emerald-400 shrink-0 mt-0.5"
+                          />
                         ) : (
-                          <PlusCircle size={16} className="text-slate-500 hover:text-slate-300 shrink-0 mt-0.5" />
+                          <PlusCircle
+                            size={16}
+                            className="text-slate-500 hover:text-slate-300 shrink-0 mt-0.5"
+                          />
                         )}
                       </button>
                     );
@@ -385,12 +494,16 @@ export default function App() {
                     min="0"
                     max="1"
                     value={riskFreeRate}
-                    onChange={(e) => setRiskFreeRate(e.target.value)}
+                    onChange={(e) => {
+                      setRiskFreeRate(e.target.value);
+                      setOptimizationResult(null);
+                    }}
                     placeholder="0.04"
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
                   />
                   <span className="text-[11px] text-slate-500">
-                    0.04 = 4.0% anual (tasa de los Bonos del Tesoro EE.UU.).
+                    Tasa anual en USD. 0.04 = 4%; es un valor editable de
+                    ejemplo, no una cotización vigente.
                   </span>
                 </div>
 
@@ -400,7 +513,10 @@ export default function App() {
                   </label>
                   <select
                     value={period}
-                    onChange={(e) => setPeriod(e.target.value)}
+                    onChange={(e) => {
+                      setPeriod(e.target.value);
+                      setOptimizationResult(null);
+                    }}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500"
                   >
                     <option value="6mo">6 Meses</option>
@@ -411,6 +527,18 @@ export default function App() {
                 </div>
               </div>
 
+              <label className="flex gap-2 items-center text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={compareCurrent}
+                  disabled={!positions.length || optimizing}
+                  onChange={(e) => {
+                    setCompareCurrent(e.target.checked);
+                    setOptimizationResult(null);
+                  }}
+                />
+                Comparar con mi cartera actual (incluí todos sus activos)
+              </label>
               {optError && (
                 <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
                   <AlertCircle size={16} />
@@ -431,36 +559,58 @@ export default function App() {
                   {optimizing ? (
                     <>
                       <RefreshCw size={16} className="animate-spin" />
-                      Descargando cotizaciones oficiales y optimizando...
+                      Consultando cotizaciones y optimizando...
                     </>
                   ) : (
                     <>
                       <TrendingUp size={16} />
-                      Calcular Portafolios Óptimos ({selectedTickers.length} Activos)
+                      Calcular Portafolios Óptimos ({
+                        selectedTickers.length
+                      }{" "}
+                      Activos)
                     </>
                   )}
                 </button>
               </div>
-            </div>
+            </fieldset>
 
             {/* Resultados y Gráficos */}
             {optimizationResult && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <p className="text-xs text-slate-400">
+                  Resultados en USD · {optimizationResult.start_date} a{" "}
+                  {optimizationResult.end_date} ·{" "}
+                  {optimizationResult.observations} retornos ·{" "}
+                  {optimizationResult.annualization_factor} períodos/año ·{" "}
+                  {optimizationResult.fx_method}. Estimaciones históricas; no
+                  garantizan retornos futuros.
+                </p>
                 {/* Gráfico de Frontera Eficiente */}
                 <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
                     <div>
-                      <h4 className="text-lg font-bold text-white">Curva de la Frontera Eficiente de Markowitz</h4>
+                      <h4 className="text-lg font-bold text-white">
+                        Curva de la Frontera Eficiente de Markowitz
+                      </h4>
                       <p className="text-xs text-slate-400">
-                        Cada punto representa una combinación de activos que maximiza el retorno para ese nivel exacto de volatilidad.
+                        Cada punto representa una combinación de activos que
+                        maximiza el retorno para ese nivel exacto de
+                        volatilidad.
                       </p>
                     </div>
                   </div>
-                  <EfficientFrontierChart
-                    frontierData={optimizationResult.frontier}
-                    gmvp={optimizationResult.gmvp}
-                    tangency={optimizationResult.tangency}
-                  />
+                  <Suspense
+                    fallback={
+                      <p className="text-slate-400">Cargando gráfico…</p>
+                    }
+                  >
+                    <EfficientFrontierChart
+                      frontierData={optimizationResult.frontier}
+                      gmvp={optimizationResult.gmvp}
+                      tangency={optimizationResult.tangency}
+                      currentPortfolio={optimizationResult.current_portfolio}
+                    />
+                  </Suspense>
                 </div>
 
                 {/* Tarjetas de Detalle de Portafolios Óptimos */}
@@ -468,6 +618,7 @@ export default function App() {
                   gmvp={optimizationResult.gmvp}
                   tangency={optimizationResult.tangency}
                 />
+                <PortfolioComparison result={optimizationResult} />
               </div>
             )}
           </div>
@@ -481,9 +632,13 @@ export default function App() {
                 Fundamentos Teóricos: Modelo de Markowitz
               </h3>
               <p className="mb-4">
-                Harry Markowitz (1952) demostró que el riesgo total de una cartera de inversión no es simplemente
-                el promedio ponderado del riesgo de cada activo individual, sino que depende de las{" "}
-                <span className="text-emerald-400 font-semibold">covarianzas y correlaciones</span> entre ellos.
+                Harry Markowitz (1952) demostró que el riesgo total de una
+                cartera de inversión no es simplemente el promedio ponderado del
+                riesgo de cada activo individual, sino que depende de las{" "}
+                <span className="text-emerald-400 font-semibold">
+                  covarianzas y correlaciones
+                </span>{" "}
+                entre ellos.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -495,7 +650,8 @@ export default function App() {
                     r_t = ln(P_t / P_(t-1))
                   </div>
                   <p className="text-xs text-slate-400">
-                    Garantizan aditividad temporal, estabilidad numérica y simetría en variaciones porcentuales.
+                    Garantizan aditividad temporal, estabilidad numérica y
+                    simetría en variaciones porcentuales.
                   </p>
                 </div>
 
@@ -504,11 +660,13 @@ export default function App() {
                     2. Retorno y Varianza de Cartera
                   </h4>
                   <div className="font-mono bg-slate-900 p-2.5 rounded text-white text-xs mb-2">
-                    mu_p = w^T * mu<br />
+                    mu_p = w^T * mu
+                    <br />
                     sigma_p^2 = w^T * Sigma * w
                   </div>
                   <p className="text-xs text-slate-400">
-                    Donde w es el vector de ponderaciones y Sigma es la matriz de covarianza insesgada (N-1).
+                    Donde w es el vector de ponderaciones y Sigma es la matriz
+                    de covarianza insesgada (N-1).
                   </p>
                 </div>
 
@@ -520,7 +678,8 @@ export default function App() {
                     Sharpe = (mu_p - r_f) / sigma_p
                   </div>
                   <p className="text-xs text-slate-400">
-                    Premio por unidad de riesgo asumida por sobre la tasa libre de riesgo de referencia.
+                    Premio por unidad de riesgo asumida por sobre la tasa libre
+                    de riesgo de referencia.
                   </p>
                 </div>
 
@@ -529,21 +688,39 @@ export default function App() {
                     4. Factores de Anualización
                   </h4>
                   <div className="font-mono bg-slate-900 p-2.5 rounded text-white text-xs mb-2">
-                    k = 252 (acciones/CEDEARs)<br />
-                    k = 365 (criptoactivos)
+                    k = 252 (acciones/CEDEARs)
+                    <br />
+                    k = 365 (carteras solo cripto)
+                    <br />k = 252 (mixtas: sesiones comunes)
                   </div>
                   <p className="text-xs text-slate-400">
-                    mu_anual = k * mu_diario, sigma_anual = sqrt(k) * sigma_diario.
+                    mu_anual = k * mu_diario, sigma_anual = sqrt(k) *
+                    sigma_diario. En carteras mixtas los movimientos cripto del
+                    fin de semana se acumulan hasta la siguiente sesión común.
+                    Los precios en ARS se convierten con el MEP histórico de
+                    cada fecha.
                   </p>
                 </div>
               </div>
 
               <div className="mt-6 p-4 bg-slate-950 rounded-xl border border-slate-800">
-                <h4 className="font-bold text-white text-sm mb-2">Restricciones del Optimizador (Long-Only):</h4>
+                <h4 className="font-bold text-white text-sm mb-2">
+                  Restricciones del Optimizador (Long-Only):
+                </h4>
                 <ul className="list-disc list-inside text-xs text-slate-400 space-y-1">
-                  <li>Totalmente invertido: <code className="text-slate-200">sum(w_i) = 1.0</code></li>
-                  <li>Sin ventas en corto: <code className="text-slate-200">w_i &gt;= 0.0</code> para todo activo i</li>
-                  <li>Tolerancia cero a datos sintéticos no verificados en el motor cuantitativo.</li>
+                  <li>
+                    Totalmente invertido:{" "}
+                    <code className="text-slate-200">sum(w_i) = 1.0</code>
+                  </li>
+                  <li>
+                    Sin ventas en corto:{" "}
+                    <code className="text-slate-200">w_i &gt;= 0.0</code> para
+                    todo activo i
+                  </li>
+                  <li>
+                    Tolerancia cero a datos sintéticos no verificados en el
+                    motor cuantitativo.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -552,11 +729,13 @@ export default function App() {
       </main>
 
       {/* Modal para agregar posición */}
-      <AddPositionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAdd={handleAddPosition}
-      />
+      {isModalOpen && (
+        <AddPositionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onAdd={handleAddPosition}
+        />
+      )}
     </div>
   );
 }

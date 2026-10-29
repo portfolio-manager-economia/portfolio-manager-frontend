@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   ScatterChart,
   Scatter,
@@ -10,11 +10,49 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export default function EfficientFrontierChart({ frontierData, gmvp, tangency, currentPortfolio }) {
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl text-xs space-y-1">
+        {data.name && (
+          <div className="font-bold text-white mb-1">{data.name}</div>
+        )}
+        <div className="text-slate-300">
+          Volatilidad (Riesgo $\sigma$):{" "}
+          <span className="font-mono text-cyan-400 font-semibold">
+            {data.volatility}%
+          </span>
+        </div>
+        <div className="text-slate-300">
+          Retorno Esperado ($\mu$):{" "}
+          <span className="font-mono text-emerald-400 font-semibold">
+            {data.return}%
+          </span>
+        </div>
+        <div className="text-slate-300">
+          Ratio de Sharpe:{" "}
+          <span className="font-mono text-amber-400 font-semibold">
+            {data.sharpe}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+export default function EfficientFrontierChart({
+  frontierData,
+  gmvp,
+  tangency,
+  currentPortfolio,
+}) {
   if (!frontierData || frontierData.length === 0) {
     return (
       <div className="h-80 flex items-center justify-center text-slate-500 text-sm">
-        No hay datos suficientes para graficar la Frontera Eficiente. Seleccioná al menos 2 activos y ejecutá la optimización.
+        No hay datos suficientes para graficar la Frontera Eficiente. Seleccioná
+        al menos 2 activos y ejecutá la optimización.
       </div>
     );
   }
@@ -58,27 +96,6 @@ export default function EfficientFrontierChart({ frontierData, gmvp, tangency, c
         },
       ]
     : [];
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl text-xs space-y-1">
-          {data.name && <div className="font-bold text-white mb-1">{data.name}</div>}
-          <div className="text-slate-300">
-            Volatilidad (Riesgo $\sigma$): <span className="font-mono text-cyan-400 font-semibold">{data.volatility}%</span>
-          </div>
-          <div className="text-slate-300">
-            Retorno Esperado ($\mu$): <span className="font-mono text-emerald-400 font-semibold">{data.return}%</span>
-          </div>
-          <div className="text-slate-300">
-            Ratio de Sharpe: <span className="font-mono text-amber-400 font-semibold">{data.sharpe}</span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="w-full h-96">
@@ -149,4 +166,3 @@ export default function EfficientFrontierChart({ frontierData, gmvp, tangency, c
     </div>
   );
 }
-

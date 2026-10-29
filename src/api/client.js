@@ -1,58 +1,60 @@
-/**
- * Cliente HTTP para comunicarse con el backend de FastAPI.
- */
+import { supabase } from "./supabase";
 
-const API_BASE = "http://localhost:8000/api";
+const API_BASE = (
+  import.meta.env.VITE_API_URL || "http://localhost:8000/api"
+).replace(/\/$/, "");
 
-export async function fetchHealth() {
-  const res = await fetch(`${API_BASE}/health`);
-  return res.json();
-}
-
-export async function fetchDolarRates() {
-  const res = await fetch(`${API_BASE}/market/dolar`);
-  return res.json();
-}
-
-export async function fetchPositions() {
-  const res = await fetch(`${API_BASE}/positions`);
-  if (!res.ok) throw new Error("Error al consultar posiciones");
-  return res.json();
-}
-
-export async function createPosition(positionData) {
-  const res = await fetch(`${API_BASE}/positions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(positionData),
+async function request(path, { authenticated = true, ...options } = {}) {
+  const headers = { "Content-Type": "application/json", ...options.headers };
+  if (authenticated) {
+    const { data, error } = supabase
+      ? await supabase.auth.getSession()
+      : { data: {} };
+    if (error || !data.session)
+      throw new Error("Iniciá sesión para continuar.");
+    headers.Authorization = `Bearer ${data.session.access_token}`;
+  }
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    signal: options.signal || AbortSignal.timeout(180000),
   });
-  if (!res.ok) throw new Error("Error al crear posición");
-  return res.json();
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const detail = body?.detail;
+    throw new Error(
+      typeof detail === "string"
+        ? detail
+        : Array.isArray(detail)
+          ? detail.map((item) => item.msg).join("; ")
+          : "No se pudo completar la operación.",
+    );
+  }
+  return body;
 }
 
-export async function deletePosition(id) {
-  const res = await fetch(`${API_BASE}/positions/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar posición");
-  return res.json();
-}
-
-export async function optimizePortfolio(tickers, riskFreeRate = 0.04, period = "1y") {
-  const res = await fetch(`${API_BASE}/optimize`, {
+export const fetchHealth = () => request("/health", { authenticated: false });
+export const fetchDolarRates = (refresh = false) =>
+  request(`/market/dolar?refresh=${refresh}`, { authenticated: false });
+export const fetchPositions = (refresh = false) =>
+  request(`/positions?refresh=${refresh}`);
+export const createPosition = (position) =>
+  request("/positions", { method: "POST", body: JSON.stringify(position) });
+export const deletePosition = (id) =>
+  request(`/positions/${id}`, { method: "DELETE" });
+export const optimizePortfolio = (
+  tickers,
+  riskFreeRate = 0.04,
+  period = "1y",
+  compareCurrent = false,
+) =>
+  request("/optimize", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       tickers,
       risk_free_rate: riskFreeRate,
-      allow_short: false,
       period,
+      allow_short: false,
+      compare_current: compareCurrent,
     }),
   });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: "Error en la optimización" }));
-    throw new Error(errorData.detail || "Error en la optimización");
-  }
-  return res.json();
-}
-
