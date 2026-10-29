@@ -79,7 +79,7 @@ export default function HelpTooltip({ label, children }) {
       onFocus={show}
       onBlur={() => { pinned.current = false; setPosition(null); }}
       onClick={() => { if (pinned.current) hide(); else { pinned.current = true; show(); } }}
-      className="inline-flex shrink-0 items-center justify-center w-6 h-6 rounded-full text-slate-400 hover:text-emerald-300 hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 align-middle"
+      className="help-trigger inline-flex shrink-0 items-center justify-center w-6 h-6 rounded-full text-slate-400 hover:text-emerald-300 hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 align-middle"
     ><CircleHelp size={16} aria-hidden="true" /></button>
     {open && createPortal(<div
       ref={bubble}
@@ -88,14 +88,14 @@ export default function HelpTooltip({ label, children }) {
       style={position}
       onMouseEnter={() => clearTimeout(timer.current)}
       onMouseLeave={leave}
-      className="rounded-xl border border-slate-600 bg-slate-900 p-3 text-left text-xs font-normal normal-case tracking-normal leading-relaxed text-slate-200 shadow-xl"
+      className="help-bubble rounded-xl border border-slate-600 bg-slate-900 p-3 text-left text-xs font-normal normal-case tracking-normal leading-relaxed text-slate-200 shadow-xl"
     ><strong className="block mb-1 text-emerald-300">{label}</strong>{children}</div>, document.body)}
   </>;
 }
 
 export function FieldLabel({ htmlFor, children, help }) {
   return <div className="flex items-center gap-1 mb-1">
-    <label htmlFor={htmlFor} className="text-xs font-semibold text-slate-300 uppercase">{children}</label>
+    <label htmlFor={htmlFor} className="field-label text-xs font-semibold text-slate-300 uppercase">{children}</label>
     <HelpTooltip label={children}>{help}</HelpTooltip>
   </div>;
 }

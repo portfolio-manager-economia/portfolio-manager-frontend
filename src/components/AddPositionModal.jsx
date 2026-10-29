@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { ASSET_CATALOG } from "../data/assets";
 import { FieldLabel } from "./HelpTooltip";
 import { HELP } from "../data/help";
+import CompanyLogo from "./CompanyLogo";
 
 export default function AddPositionModal({ isOpen, onClose, onAdd }) {
   const [selectedAsset, setSelectedAsset] = useState(ASSET_CATALOG[0].ticker);
@@ -79,9 +80,9 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
   const categories = Array.from(new Set(ASSET_CATALOG.map((a) => a.category)));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl animate-in fade-in zoom-in-95">
-        <div className="flex justify-between items-center mb-5">
+    <div className="position-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="position-modal-panel bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="position-modal-header flex justify-between items-center mb-5">
           <h3 className="text-xl font-bold text-white">Nueva Posición</h3>
           <button
             disabled={saving}
@@ -99,38 +100,44 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
               <FieldLabel htmlFor="position-asset" help={HELP.asset}>
                 Seleccionar Activo
               </FieldLabel>
-              <select
-                id="position-asset"
-                value={isCustom ? "CUSTOM" : selectedAsset}
-                onChange={handleSelectAsset}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-medium text-sm focus:outline-none focus:border-emerald-500"
-              >
-                {categories.map((cat) => (
-                  <optgroup
-                    key={cat}
-                    label={`── ${cat} ──`}
-                    className="bg-slate-900 text-emerald-400 font-bold"
-                  >
-                    {ASSET_CATALOG.filter((a) => a.category === cat).map(
-                      (asset) => (
-                        <option
-                          key={asset.ticker}
-                          value={asset.ticker}
-                          className="bg-slate-800 text-white font-normal"
-                        >
-                          {asset.name} ({asset.ticker})
-                        </option>
-                      ),
-                    )}
-                  </optgroup>
-                ))}
-                <option
-                  value="CUSTOM"
-                  className="bg-slate-900 text-amber-300 font-semibold"
+              <div className="asset-select-row">
+                <CompanyLogo
+                  company={isCustom ? customTicker : selectedAsset}
+                  size={32}
+                />
+                <select
+                  id="position-asset"
+                  value={isCustom ? "CUSTOM" : selectedAsset}
+                  onChange={handleSelectAsset}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-medium text-sm focus:outline-none focus:border-emerald-500"
                 >
-                  ✏️ Otro activo (ingresar ticker manual...)
-                </option>
-              </select>
+                  {categories.map((cat) => (
+                    <optgroup
+                      key={cat}
+                      label={`── ${cat} ──`}
+                      className="bg-slate-900 text-emerald-400 font-bold"
+                    >
+                      {ASSET_CATALOG.filter((a) => a.category === cat).map(
+                        (asset) => (
+                          <option
+                            key={asset.ticker}
+                            value={asset.ticker}
+                            className="bg-slate-800 text-white font-normal"
+                          >
+                            {asset.name} ({asset.ticker})
+                          </option>
+                        ),
+                      )}
+                    </optgroup>
+                  ))}
+                  <option
+                    value="CUSTOM"
+                    className="bg-slate-900 text-amber-300 font-semibold"
+                  >
+                    ✏️ Otro activo (ingresar ticker manual...)
+                  </option>
+                </select>
+              </div>
             </div>
 
             {/* Si eligió ingresar manualmente */}
@@ -261,7 +268,7 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                 {error}
               </p>
             )}
-            <div className="flex gap-3 pt-3">
+            <div className="position-modal-actions flex gap-3 pt-3">
               <button
                 type="button"
                 onClick={onClose}

@@ -1,5 +1,6 @@
 import HelpTooltip from "./HelpTooltip";
 import { HELP } from "../data/help";
+import CompanyLogo from "./CompanyLogo";
 
 const COLUMN_HELP = {
   "Activo": HELP.ticker,
@@ -28,9 +29,9 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
   const date = (value) =>
     value ? new Date(value).toLocaleString("es-AR") : "Sin cotización";
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-slate-800 p-5 rounded-xl">
+    <div className="positions-content space-y-6">
+      <div className="summary-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="summary-card summary-card-value bg-slate-800 p-5 rounded-xl">
           <p className="text-sm text-slate-400">Valor total · USD <HelpTooltip label="Valor total en USD">{HELP.total}</HelpTooltip></p>
           <p className="text-3xl font-bold mt-2">
             {complete ? money(totalValue) : "No disponible"}
@@ -39,7 +40,7 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
             Costo histórico en USD: {money(totalCost)} <HelpTooltip label="Costo histórico en USD">{HELP.cost}</HelpTooltip>
           </p>
         </div>
-        <div className="bg-slate-800 p-5 rounded-xl">
+        <div className="summary-card summary-card-performance bg-slate-800 p-5 rounded-xl">
           <p className="text-sm text-slate-400">Ganancia / pérdida · USD <HelpTooltip label="Ganancia o pérdida">{HELP.pnl}</HelpTooltip></p>
           <p
             className={`text-3xl font-bold mt-2 ${pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}
@@ -52,14 +53,14 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
               : "—"}
           </p>
         </div>
-        <div className="bg-slate-800 p-5 rounded-xl">
+        <div className="summary-card summary-card-count bg-slate-800 p-5 rounded-xl">
           <p className="text-sm text-slate-400">
             Posiciones registradas: {positions.length}
             <HelpTooltip label="Posiciones registradas">Cada compra cargada es una posición. Si compraste el mismo activo en dos fechas y cargaste ambas compras, se cuentan dos posiciones, aunque sea un solo activo distinto.</HelpTooltip>
           </p>
           <button
             onClick={onOpenModal}
-            className="mt-4 w-full bg-emerald-600 rounded-lg p-3"
+            className="primary-action mt-4 w-full bg-emerald-600 rounded-lg p-3"
           >
             + Agregar posición
           </button>
@@ -76,13 +77,13 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
         Las compras en ARS usan el MEP de compra guardado y el valor actual usa
         MEP vigente. Bonos: precio por 100 de valor nominal.
       </p>
-      <div className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
+      <div className="positions-table-wrap overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
         {positions.length === 0 ? (
           <p className="p-10 text-center text-slate-400">
             Agregá tu primera posición para comenzar.
           </p>
         ) : (
-          <table className="w-full text-sm text-right">
+          <table className="data-table positions-table w-full text-sm text-right">
             <thead className="text-slate-400">
               <tr>
                 {[
@@ -107,9 +108,14 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
               {positions.map((p) => (
                 <tr key={p.id} className="border-t border-slate-800">
                   <td className="p-3 font-mono">
-                    <strong>{p.ticker}</strong>
-                    <div className="text-xs text-slate-400">
-                      {p.asset_type} · {p.currency}
+                    <div className="asset-identity">
+                      <CompanyLogo company={p.ticker} size={32} />
+                      <div>
+                        <strong>{p.ticker}</strong>
+                        <div className="text-xs text-slate-400">
+                          {p.asset_type} · {p.currency}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="p-3">{p.quantity}</td>
@@ -124,10 +130,14 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
                   <td className="p-3">
                     {p.market_value != null ? money(p.market_value) : "—"}
                   </td>
-                  <td className="p-3">
+                  <td
+                    className={`p-3 ${p.unrealized_pnl == null ? "" : p.unrealized_pnl >= 0 ? "pnl-positive" : "pnl-negative"}`}
+                  >
                     {p.unrealized_pnl != null ? money(p.unrealized_pnl) : "—"}
                   </td>
-                  <td className="p-3">
+                  <td
+                    className={`p-3 ${p.unrealized_pnl_pct == null ? "" : p.unrealized_pnl_pct >= 0 ? "pnl-positive" : "pnl-negative"}`}
+                  >
                     {p.unrealized_pnl_pct != null
                       ? `${(p.unrealized_pnl_pct * 100).toFixed(2)}%`
                       : "—"}

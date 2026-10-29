@@ -22,6 +22,7 @@ import {
 import DolarTicker from "./components/DolarTicker";
 import PositionsTable from "./components/PositionsTable";
 import AddPositionModal from "./components/AddPositionModal";
+import CompanyLogo from "./components/CompanyLogo";
 const EfficientFrontierChart = lazy(
   () => import("./components/EfficientFrontierChart"),
 );
@@ -187,34 +188,34 @@ export default function App() {
       : ASSET_CATALOG.filter((a) => a.category === catalogFilter);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Ticker de cotizaciones de Argentina */}
       <DolarTicker />
 
       {/* Header y Navegación Principal */}
-      <header className="border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+      <header className="app-header border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-40">
+        <div className="app-header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="brand-lockup flex items-center gap-3">
+            <div className="brand-mark w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <TrendingUp className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white m-0">
+              <h1 className="brand-title text-xl font-bold tracking-tight text-white m-0">
                 Portfolio Manager
               </h1>
-              <p className="text-xs text-slate-400 m-0">
+              <p className="brand-subtitle text-xs text-slate-400 m-0">
                 Modelo Cuantitativo de Markowitz • Finanzas y Economía
               </p>
             </div>
           </div>
 
           {/* Selector de Pestañas */}
-          <nav className="flex items-center gap-2 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+          <nav className="app-navigation flex items-center gap-2 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => setActiveTab("portfolio")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`app-tab flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "portfolio"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "app-tab-active bg-emerald-600 text-white shadow-md"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -223,9 +224,9 @@ export default function App() {
             </button>
             <button
               onClick={() => setActiveTab("optimizer")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`app-tab flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "optimizer"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "app-tab-active bg-emerald-600 text-white shadow-md"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -234,9 +235,9 @@ export default function App() {
             </button>
             <button
               onClick={() => setActiveTab("theory")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`app-tab flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "theory"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "app-tab-active bg-emerald-600 text-white shadow-md"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -248,13 +249,13 @@ export default function App() {
       </header>
 
       {/* Contenido Principal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="main-container flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* PESTAÑA 1: MI PORTAFOLIO */}
         {activeTab === "portfolio" && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">
+            <div className="portfolio-intro flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="portfolio-intro-copy">
+                <h2 className="page-title text-2xl font-bold text-white tracking-tight">
                   Seguimiento de Cartera
                 </h2>
                 <p className="text-sm text-slate-400">
@@ -263,7 +264,7 @@ export default function App() {
                   tener demora del proveedor.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="portfolio-actions flex gap-2">
                 <button
                   onClick={() => loadPositions(true)}
                   disabled={loadingPositions}
@@ -317,13 +318,13 @@ export default function App() {
 
         {/* PESTAÑA 2: OPTIMIZACIÓN MARKOWITZ */}
         {activeTab === "optimizer" && (
-          <div className="space-y-8">
+          <div className="optimizer-page space-y-8">
             {/* Panel de Configuración de la Optimización */}
             <fieldset
               disabled={optimizing}
-              className="min-w-0 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6"
+              className="optimizer-config min-w-0 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6"
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+              <div className="optimizer-heading flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-800 pb-4">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Sliders className="text-emerald-400" size={20} />
@@ -367,7 +368,7 @@ export default function App() {
               </div>
 
               {/* Activos Seleccionados Actualmente */}
-              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+              <div className="selected-assets-panel p-4 bg-slate-950 rounded-xl border border-slate-800">
                 <div className="flex justify-between items-center mb-2">
                   <div className="text-xs font-bold text-white uppercase tracking-wider">
                     Activos Seleccionados ({selectedTickers.length}):
@@ -400,8 +401,9 @@ export default function App() {
                       return (
                         <span
                           key={ticker}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shadow-sm"
+                          className="selected-asset-chip inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shadow-sm"
                         >
+                          <CompanyLogo company={ticker} size={32} />
                           {ticker}
                           {found && (
                             <span className="font-sans font-normal text-slate-400 text-[10px]">
@@ -449,25 +451,28 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-1">
+                <div className="catalog-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-1">
                   {filteredCatalog.map((asset) => {
                     const isSelected = selectedTickers.includes(asset.ticker);
                     return (
                       <button
                         key={asset.ticker}
                         onClick={() => toggleTicker(asset.ticker)}
-                        className={`text-left p-2.5 rounded-xl border text-xs transition-all flex items-start justify-between ${
+                        className={`catalog-asset text-left p-2.5 rounded-xl border text-xs transition-all flex items-start justify-between ${
                           isSelected
-                            ? "bg-emerald-600/20 border-emerald-500 text-white font-semibold shadow-sm"
+                            ? "catalog-asset-selected bg-emerald-600/20 border-emerald-500 text-white font-semibold shadow-sm"
                             : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/60"
                         }`}
                       >
-                        <div className="truncate pr-1">
-                          <div className="font-mono font-bold text-xs">
-                            {asset.ticker}
-                          </div>
-                          <div className="text-[11px] text-slate-400 truncate">
-                            {asset.name}
+                        <div className="catalog-asset-main flex items-center gap-2 min-w-0">
+                          <CompanyLogo company={asset.ticker} size={32} />
+                          <div className="catalog-asset-copy truncate pr-1">
+                            <div className="font-mono font-bold text-xs">
+                              {asset.ticker}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate">
+                              {asset.name}
+                            </div>
                           </div>
                         </div>
                         {isSelected ? (
@@ -585,7 +590,7 @@ export default function App() {
 
             {/* Resultados y Gráficos */}
             {optimizationResult && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="optimization-results space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <p className="text-xs text-slate-400">
                   Resultados en USD · {optimizationResult.start_date} a{" "}
                   {optimizationResult.end_date} ·{" "}
@@ -595,7 +600,7 @@ export default function App() {
                   garantizan retornos futuros.
                 </p>
                 {/* Gráfico de Frontera Eficiente */}
-                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div className="frontier-chart-card bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
                     <div>
                       <h4 className="text-lg font-bold text-white">
@@ -635,8 +640,8 @@ export default function App() {
 
         {/* PESTAÑA 3: TEORÍA & FORMULACIÓN MATEMÁTICA */}
         {activeTab === "theory" && (
-          <div className="max-w-4xl mx-auto space-y-6 text-slate-300 text-sm leading-relaxed">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+          <div className="theory-page max-w-4xl mx-auto space-y-6 text-slate-300 text-sm leading-relaxed">
+            <div className="theory-card bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
               <h3 className="text-xl font-bold text-white mb-3">
                 Fundamentos Teóricos: Modelo de Markowitz
               </h3>

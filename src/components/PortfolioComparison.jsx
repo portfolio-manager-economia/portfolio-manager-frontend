@@ -1,5 +1,6 @@
 import HelpTooltip from "./HelpTooltip";
 import { HELP } from "../data/help";
+import CompanyLogo from "./CompanyLogo";
 
 const METRIC_HELP = { expected_return: HELP.expectedReturn, volatility: HELP.volatility, sharpe_ratio: HELP.sharpe };
 
@@ -8,7 +9,7 @@ export default function PortfolioComparison({ result }) {
   const portfolios = [result.current_portfolio, result.gmvp, result.tangency];
   const tickers = Object.keys(result.gmvp.weights);
   return (
-    <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+    <section className="comparison-card bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
       <h3 className="text-lg font-bold">
         Tu cartera frente a las alternativas óptimas
       </h3>
@@ -18,7 +19,7 @@ export default function PortfolioComparison({ result }) {
         {new Date(result.valuation_at).toLocaleString("es-AR")}.
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-right">
+        <table className="data-table comparison-table w-full text-sm text-right">
           <thead>
             <tr>
               <th className="text-left py-2">Métrica / Activo</th>
@@ -52,7 +53,10 @@ export default function PortfolioComparison({ result }) {
                 100;
               return (
                 <tr key={ticker} className="border-t border-slate-800">
-                  <td className="text-left py-2 font-mono">{ticker}</td>
+                  <td className="ticker-identity text-left py-2 font-mono">
+                    <CompanyLogo company={ticker} size={32} />
+                    {ticker}
+                  </td>
                   {portfolios.map((p, i) => (
                     <td key={i}>
                       {((p.weights[ticker] || 0) * 100).toFixed(1)}%
