@@ -1,3 +1,8 @@
+import HelpTooltip from "./HelpTooltip";
+import { HELP } from "../data/help";
+
+const METRIC_HELP = { expected_return: HELP.expectedReturn, volatility: HELP.volatility, sharpe_ratio: HELP.sharpe };
+
 export default function PortfolioComparison({ result }) {
   if (!result.current_portfolio) return null;
   const portfolios = [result.current_portfolio, result.gmvp, result.tangency];
@@ -17,10 +22,10 @@ export default function PortfolioComparison({ result }) {
           <thead>
             <tr>
               <th className="text-left py-2">Métrica / Activo</th>
-              <th>Actual</th>
+              <th>Actual <HelpTooltip label="Pesos de la cartera actual">{HELP.weights}</HelpTooltip></th>
               <th>Mínima varianza</th>
               <th>Máximo Sharpe</th>
-              <th>Cambio a máx. Sharpe</th>
+              <th>Cambio a máx. Sharpe <HelpTooltip label="Cambio en puntos porcentuales">{HELP.delta}</HelpTooltip></th>
             </tr>
           </thead>
           <tbody>
@@ -30,7 +35,7 @@ export default function PortfolioComparison({ result }) {
               ["Sharpe", "sharpe_ratio", 1, ""],
             ].map(([label, key, factor, unit]) => (
               <tr key={key} className="border-t border-slate-800">
-                <td className="text-left py-2">{label}</td>
+                <td className="text-left py-2">{label} <HelpTooltip label={label}>{METRIC_HELP[key]}</HelpTooltip></td>
                 {portfolios.map((p, i) => (
                   <td key={i}>
                     {(p[key] * factor).toFixed(2)}

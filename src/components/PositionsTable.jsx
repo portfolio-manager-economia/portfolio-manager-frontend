@@ -1,3 +1,17 @@
+import HelpTooltip from "./HelpTooltip";
+import { HELP } from "../data/help";
+
+const COLUMN_HELP = {
+  "Activo": HELP.ticker,
+  "Cantidad / VN": `${HELP.quantity} En bonos, se muestra el valor nominal comprado.`,
+  "Compra": "Es el precio de compra por unidad, en la moneda del activo. En bonos, es por cada 100 de valor nominal.",
+  "Último precio": "Es la última cotización recibida, en la moneda del activo. Puede tener demora o corresponder al último cierre; revisá la fecha en la columna Cotización.",
+  "Valor USD": HELP.total,
+  "G/P USD": HELP.pnl,
+  "G/P %": HELP.pnl,
+  "Cotización": "Indica a qué fecha y hora corresponde el precio usado. Que hayas actualizado la pantalla no significa que el mercado haya publicado un precio nuevo.",
+};
+
 const money = (value) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "USD" }).format(
     value,
@@ -17,16 +31,16 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-800 p-5 rounded-xl">
-          <p className="text-sm text-slate-400">Valor total · USD</p>
+          <p className="text-sm text-slate-400">Valor total · USD <HelpTooltip label="Valor total en USD">{HELP.total}</HelpTooltip></p>
           <p className="text-3xl font-bold mt-2">
             {complete ? money(totalValue) : "No disponible"}
           </p>
           <p className="text-xs text-slate-400 mt-2">
-            Costo histórico en USD: {money(totalCost)}
+            Costo histórico en USD: {money(totalCost)} <HelpTooltip label="Costo histórico en USD">{HELP.cost}</HelpTooltip>
           </p>
         </div>
         <div className="bg-slate-800 p-5 rounded-xl">
-          <p className="text-sm text-slate-400">Ganancia / pérdida · USD</p>
+          <p className="text-sm text-slate-400">Ganancia / pérdida · USD <HelpTooltip label="Ganancia o pérdida">{HELP.pnl}</HelpTooltip></p>
           <p
             className={`text-3xl font-bold mt-2 ${pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}
           >
@@ -41,6 +55,7 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
         <div className="bg-slate-800 p-5 rounded-xl">
           <p className="text-sm text-slate-400">
             Posiciones registradas: {positions.length}
+            <HelpTooltip label="Posiciones registradas">Cada compra cargada es una posición. Si compraste el mismo activo en dos fechas y cargaste ambas compras, se cuentan dos posiciones, aunque sea un solo activo distinto.</HelpTooltip>
           </p>
           <button
             onClick={onOpenModal}
@@ -83,6 +98,7 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
                 ].map((label, i) => (
                   <th className="p-3 whitespace-nowrap" key={i}>
                     {label}
+                    {COLUMN_HELP[label] && <HelpTooltip label={label}>{COLUMN_HELP[label]}</HelpTooltip>}
                   </th>
                 ))}
               </tr>

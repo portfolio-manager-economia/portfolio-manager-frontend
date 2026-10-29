@@ -1,5 +1,7 @@
 import React from "react";
 import { ShieldCheck, Zap } from "lucide-react";
+import HelpTooltip from "./HelpTooltip";
+import { HELP } from "../data/help";
 
 export default function OptimalPortfoliosCard({ gmvp, tangency }) {
   if (!gmvp || !tangency) return null;
@@ -38,7 +40,7 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
         <div className="grid grid-cols-3 gap-2 p-3 bg-slate-900/60 rounded-lg mb-4 text-center">
           <div>
             <div className="text-[10px] uppercase text-slate-500">
-              Retorno Anual
+              Retorno Anual <HelpTooltip label="Retorno anual estimado">{HELP.expectedReturn}</HelpTooltip>
             </div>
             <div className="font-mono text-sm font-bold text-purple-300">
               {(gmvp.expected_return * 100).toFixed(2)}%
@@ -46,14 +48,14 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
           </div>
           <div>
             <div className="text-[10px] uppercase text-slate-500">
-              Volatilidad
+              Volatilidad <HelpTooltip label="Volatilidad">{HELP.volatility}</HelpTooltip>
             </div>
             <div className="font-mono text-sm font-bold text-white">
               {(gmvp.volatility * 100).toFixed(2)}%
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-slate-500">Sharpe</div>
+            <div className="text-[10px] uppercase text-slate-500">Sharpe <HelpTooltip label="Ratio de Sharpe">{HELP.sharpe}</HelpTooltip></div>
             <div className="font-mono text-sm font-bold text-amber-400">
               {gmvp.sharpe_ratio.toFixed(2)}
             </div>
@@ -61,7 +63,7 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
         </div>
 
         <div className="text-xs font-semibold uppercase text-slate-400 mb-2">
-          Composición Óptima:
+          Composición Óptima: <HelpTooltip label="Composición óptima">{HELP.weights}</HelpTooltip>
         </div>
         <div className="bg-slate-900/40 p-2 rounded-lg max-h-40 overflow-y-auto">
           {renderWeights(gmvp.weights)}
@@ -84,7 +86,7 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
         <div className="grid grid-cols-3 gap-2 p-3 bg-slate-900/60 rounded-lg mb-4 text-center">
           <div>
             <div className="text-[10px] uppercase text-slate-500">
-              Retorno Anual
+              Retorno Anual <HelpTooltip label="Retorno anual estimado">{HELP.expectedReturn}</HelpTooltip>
             </div>
             <div className="font-mono text-sm font-bold text-emerald-300">
               {(tangency.expected_return * 100).toFixed(2)}%
@@ -92,14 +94,14 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
           </div>
           <div>
             <div className="text-[10px] uppercase text-slate-500">
-              Volatilidad
+              Volatilidad <HelpTooltip label="Volatilidad">{HELP.volatility}</HelpTooltip>
             </div>
             <div className="font-mono text-sm font-bold text-white">
               {(tangency.volatility * 100).toFixed(2)}%
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-slate-500">Sharpe</div>
+            <div className="text-[10px] uppercase text-slate-500">Sharpe <HelpTooltip label="Ratio de Sharpe">{HELP.sharpe}</HelpTooltip></div>
             <div className="font-mono text-sm font-bold text-amber-400">
               {tangency.sharpe_ratio.toFixed(2)}
             </div>
@@ -107,7 +109,7 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
         </div>
 
         <div className="text-xs font-semibold uppercase text-slate-400 mb-2">
-          Composición Óptima:
+          Composición Óptima: <HelpTooltip label="Composición óptima">{HELP.weights}</HelpTooltip>
         </div>
         <div className="bg-slate-900/40 p-2 rounded-lg max-h-40 overflow-y-auto">
           {renderWeights(tangency.weights)}

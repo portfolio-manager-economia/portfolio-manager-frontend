@@ -12,6 +12,8 @@ Aplicación React + Vite para registrar inversiones, seguir su valor en USD y an
 
 La barra superior consulta dólar oficial, MEP, CCL, blue y cripto cada 60 segundos, con fechas del proveedor y aviso explícito ante errores.
 
+Los campos de registro, nueva posición y optimización, así como las principales métricas, incluyen un ícono de ayuda `?` con explicaciones y ejemplos. Se abre al pasar el mouse, enfocar con teclado o tocar el ícono; puede cerrarse con Escape o al pulsar fuera. Las ayudas se muestran sobre el modal y las tablas sin quedar recortadas por sus contenedores.
+
 ## Configuración
 
 Node 22+ recomendado por Vite 8. Primero crear el proyecto Supabase y aplicar la migración y pruebas RLS descritas en el README del backend. Habilitar email/password y agregar `http://localhost:5173` a las URLs autorizadas de Authentication.

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../api/supabase";
+import { FieldLabel } from "./HelpTooltip";
+import { HELP } from "../data/help";
 
 export default function AuthGate({ children }) {
   const [session, setSession] = useState(null);
@@ -110,9 +112,10 @@ export default function AuthGate({ children }) {
             ? "Creá tu cuenta para guardar tu cartera."
             : "Iniciá sesión para acceder a tu cartera."}
         </p>
-        <label className="block">
-          Correo
+        <div>
+          <FieldLabel htmlFor="auth-email" help={HELP.email}>Correo</FieldLabel>
           <input
+            id="auth-email"
             type="email"
             autoComplete="email"
             required
@@ -120,10 +123,11 @@ export default function AuthGate({ children }) {
             onChange={(e) => setEmail(e.target.value)}
             className="block w-full bg-slate-950 rounded-lg p-3 mt-2"
           />
-        </label>
-        <label className="block">
-          Contraseña
+        </div>
+        <div>
+          <FieldLabel htmlFor="auth-password" help={HELP.password}>Contraseña</FieldLabel>
           <input
+            id="auth-password"
             type="password"
             autoComplete={signup ? "new-password" : "current-password"}
             minLength={8}
@@ -132,7 +136,7 @@ export default function AuthGate({ children }) {
             onChange={(e) => setPassword(e.target.value)}
             className="block w-full bg-slate-950 rounded-lg p-3 mt-2"
           />
-        </label>
+        </div>
         {message && (
           <p role="status" className="text-amber-300 text-sm">
             {message}

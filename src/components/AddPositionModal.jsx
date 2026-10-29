@@ -1,6 +1,8 @@
 ﻿import React, { useState } from "react";
 import { X } from "lucide-react";
 import { ASSET_CATALOG } from "../data/assets";
+import { FieldLabel } from "./HelpTooltip";
+import { HELP } from "../data/help";
 
 export default function AddPositionModal({ isOpen, onClose, onAdd }) {
   const [selectedAsset, setSelectedAsset] = useState(ASSET_CATALOG[0].ticker);
@@ -94,10 +96,11 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
           <fieldset disabled={saving} className="space-y-4">
             {/* Selector de Activos del Catálogo */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+              <FieldLabel htmlFor="position-asset" help={HELP.asset}>
                 Seleccionar Activo
-              </label>
+              </FieldLabel>
               <select
+                id="position-asset"
                 value={isCustom ? "CUSTOM" : selectedAsset}
                 onChange={handleSelectAsset}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-medium text-sm focus:outline-none focus:border-emerald-500"
@@ -134,10 +137,11 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
             {isCustom && (
               <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-700 space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                  <FieldLabel htmlFor="position-ticker" help={HELP.ticker}>
                     Ticker Oficial (Yahoo Finance)
-                  </label>
+                  </FieldLabel>
                   <input
+                    id="position-ticker"
                     type="text"
                     placeholder="Ej: NVDA, YPFD.BA, ETH-USD"
                     value={customTicker}
@@ -148,10 +152,11 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                  <FieldLabel htmlFor="position-type" help={HELP.assetType}>
                     Tipo de Activo
-                  </label>
+                  </FieldLabel>
                   <select
+                    id="position-type"
                     value={assetType}
                     onChange={(e) => setAssetType(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
@@ -167,12 +172,13 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                <FieldLabel htmlFor="position-quantity" help={assetType === "bond" ? HELP.nominal : HELP.quantity}>
                   {assetType === "bond"
                     ? "Valor nominal (bonos)"
                     : "Cantidad de títulos"}
-                </label>
+                </FieldLabel>
                 <input
+                  id="position-quantity"
                   type="number"
                   step="any"
                   min="0.000001"
@@ -184,11 +190,11 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                  Precio de compra ({currency}){" "}
-                  {assetType === "bond" ? "por 100 VN" : "por unidad"}
-                </label>
+                <FieldLabel htmlFor="position-price" help={assetType === "bond" ? HELP.bondPrice : HELP.buyPrice}>
+                  {`Precio de compra (${currency}) ${assetType === "bond" ? "por 100 VN" : "por unidad"}`}
+                </FieldLabel>
                 <input
+                  id="position-price"
                   type="number"
                   step="any"
                   min="0.01"
@@ -202,10 +208,11 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">
+              <FieldLabel htmlFor="position-currency" help={HELP.currency}>
                 Moneda de cotización y compra
-              </label>
+              </FieldLabel>
               <select
+                id="position-currency"
                 disabled={!isCustom}
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
@@ -216,9 +223,10 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
               </select>
             </div>
             {currency === "ARS" && (
-              <label className="block text-xs text-slate-300">
-                MEP de compra (ARS por USD, opcional)
+              <div>
+                <FieldLabel htmlFor="position-fx" help={HELP.buyFx}>MEP de compra (ARS por USD, opcional)</FieldLabel>
                 <input
+                  id="position-fx"
                   type="number"
                   min="0.01"
                   step="any"
@@ -231,13 +239,14 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                   Podés ingresar tu tipo de cambio efectivo; si lo dejás vacío
                   se consulta el MEP histórico de ArgentinaDatos.
                 </span>
-              </label>
+              </div>
             )}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+              <FieldLabel htmlFor="position-date" help={HELP.buyDate}>
                 Fecha de Adquisición
-              </label>
+              </FieldLabel>
               <input
+                id="position-date"
                 type="date"
                 max={today}
                 value={buyDate}

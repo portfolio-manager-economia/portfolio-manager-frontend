@@ -27,6 +27,8 @@ const EfficientFrontierChart = lazy(
 );
 import OptimalPortfoliosCard from "./components/OptimalPortfoliosCard";
 import PortfolioComparison from "./components/PortfolioComparison";
+import HelpTooltip, { FieldLabel } from "./components/HelpTooltip";
+import { HELP } from "./data/help";
 import { ASSET_CATALOG, PRESET_PORTFOLIOS } from "./data/assets";
 
 import {
@@ -345,10 +347,11 @@ export default function App() {
 
               {/* Presets rápidos */}
               <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                   <Sparkles size={14} className="text-amber-400" />
                   Carteras Sugeridas (1 Click):
-                </label>
+                  <HelpTooltip label="Carteras sugeridas">{HELP.presets}</HelpTooltip>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {PRESET_PORTFOLIOS.map((p) => (
                     <button
@@ -366,9 +369,10 @@ export default function App() {
               {/* Activos Seleccionados Actualmente */}
               <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-white uppercase tracking-wider">
+                  <div className="text-xs font-bold text-white uppercase tracking-wider">
                     Activos Seleccionados ({selectedTickers.length}):
-                  </label>
+                    <HelpTooltip label="Activos seleccionados">{HELP.selected}</HelpTooltip>
+                  </div>
                   {selectedTickers.length > 0 && (
                     <button
                       onClick={() => {
@@ -421,10 +425,11 @@ export default function App() {
               {/* Catálogo de Activos para Clickear */}
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Catálogo de Activos Disponibles (hacé clic para
                     sumar/quitar):
-                  </label>
+                    <HelpTooltip label="Catálogo de activos">{HELP.catalog}</HelpTooltip>
+                  </div>
 
                   {/* Filtro por categoría */}
                   <div className="flex flex-wrap gap-1">
@@ -485,10 +490,11 @@ export default function App() {
               {/* Parámetros Técnicos */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                  <FieldLabel htmlFor="optimizer-risk-free" help={HELP.riskFree}>
                     Tasa Libre de Riesgo (r_f)
-                  </label>
+                  </FieldLabel>
                   <input
+                    id="optimizer-risk-free"
                     type="number"
                     step="0.01"
                     min="0"
@@ -508,10 +514,11 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                  <FieldLabel htmlFor="optimizer-period" help={HELP.period}>
                     Ventana Histórica de Precios
-                  </label>
+                  </FieldLabel>
                   <select
+                    id="optimizer-period"
                     value={period}
                     onChange={(e) => {
                       setPeriod(e.target.value);
@@ -527,8 +534,9 @@ export default function App() {
                 </div>
               </div>
 
-              <label className="flex gap-2 items-center text-sm text-slate-300">
+              <div className="flex gap-2 items-center text-sm text-slate-300"><label htmlFor="optimizer-compare" className="flex gap-2 items-center">
                 <input
+                  id="optimizer-compare"
                   type="checkbox"
                   checked={compareCurrent}
                   disabled={!positions.length || optimizing}
@@ -539,6 +547,7 @@ export default function App() {
                 />
                 Comparar con mi cartera actual (incluí todos sus activos)
               </label>
+              <HelpTooltip label="Comparar con mi cartera actual">{HELP.compare}</HelpTooltip></div>
               {optError && (
                 <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
                   <AlertCircle size={16} />
