@@ -22,6 +22,7 @@ import {
 import DolarTicker from "./components/DolarTicker";
 import PositionsTable from "./components/PositionsTable";
 import AddPositionModal from "./components/AddPositionModal";
+import ImportPortfolioModal from "./components/ImportPortfolioModal";
 const EfficientFrontierChart = lazy(
   () => import("./components/EfficientFrontierChart"),
 );
@@ -43,6 +44,7 @@ export default function App() {
   const [positions, setPositions] = useState([]);
   const [loadingPositions, setLoadingPositions] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Estado del Optimizador
   const [selectedTickers, setSelectedTickers] = useState([
@@ -311,6 +313,7 @@ export default function App() {
               positions={positions}
               onDelete={handleDeletePosition}
               onOpenModal={() => setIsModalOpen(true)}
+              onImport={() => setIsImportOpen(true)}
             />
           </div>
         )}
@@ -738,6 +741,10 @@ export default function App() {
       </main>
 
       {/* Modal para agregar posición */}
+      {isImportOpen && <ImportPortfolioModal positions={positions} onClose={() => setIsImportOpen(false)} onImported={async () => {
+        setOptimizationResult(null);
+        await loadPositions();
+      }} />}
       {isModalOpen && (
         <AddPositionModal
           isOpen={isModalOpen}

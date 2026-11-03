@@ -1,5 +1,6 @@
 import HelpTooltip from "./HelpTooltip";
 import { HELP } from "../data/help";
+import AssetLogo from "./AssetLogo";
 
 const COLUMN_HELP = {
   "Activo": HELP.ticker,
@@ -17,7 +18,7 @@ const money = (value) =>
     value,
   );
 
-export default function PositionsTable({ positions, onDelete, onOpenModal }) {
+export default function PositionsTable({ positions, onDelete, onOpenModal, onImport }) {
   const complete = positions.every((p) => p.market_value != null);
   const totalCost = positions.reduce((sum, p) => sum + p.cost_basis_usd, 0);
   const totalValue = positions.reduce(
@@ -63,6 +64,7 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
           >
             + Agregar posición
           </button>
+          {onImport && <button onClick={onImport} className="mt-2 w-full border border-cyan-700 text-cyan-200 hover:bg-cyan-950 rounded-lg p-3">Importar cartera desde captura</button>}
         </div>
       </div>
       {!complete && (
@@ -107,9 +109,14 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
               {positions.map((p) => (
                 <tr key={p.id} className="border-t border-slate-800">
                   <td className="p-3 font-mono">
+                    <div className="flex items-center gap-3 text-left">
+                    <AssetLogo ticker={p.ticker} url={p.logo_url} />
+                    <div>
                     <strong>{p.ticker}</strong>
                     <div className="text-xs text-slate-400">
                       {p.asset_type} · {p.currency}
+                    </div>
+                    </div>
                     </div>
                   </td>
                   <td className="p-3">{p.quantity}</td>

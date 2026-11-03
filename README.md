@@ -4,6 +4,10 @@ Aplicación React + Vite para registrar inversiones, seguir su valor en USD y an
 
 ## Pestañas
 
+**Buscador y logos:** en Nueva Posición se puede buscar por nombre o ticker con sugerencias de Yahoo Finance, elegir un resultado y ver su mercado, moneda verificada y última cotización fechada. El precio de compra se completa por separado. El catálogo sigue disponible y la entrada manual queda como última opción. La tabla y el buscador muestran logos de Financial Modeling Prep; si una imagen falla, aparecen las iniciales del símbolo. No se usa Gemini ni se necesitan nuevas claves para esta función.
+
+**Importar cartera desde captura:** disponible en Mi Portafolio. Admite PNG/JPG/WebP, muestra vista previa y borrador editable antes de guardar. Incluye dos capturas ficticias descargables para probar campos completos y faltantes. Gemini se configura una sola vez en el backend; el usuario no conecta una API. Ver `../portfolio-manager-backend/docs/probar-importacion.md` para ejecutar ambos servicios y completar la prueba real.
+
 | Pestaña | Funciones |
 | --- | --- |
 | Mi Portafolio | Alta y eliminación de posiciones, precio y moneda nativos, fechas de cotización, costo histórico, valuación y ganancia/pérdida en USD. Actualización automática cada 60 segundos y actualización manual que evita caché. |

@@ -3,6 +3,8 @@ import { X } from "lucide-react";
 import { ASSET_CATALOG } from "../data/assets";
 import { FieldLabel } from "./HelpTooltip";
 import { HELP } from "../data/help";
+import AssetSearch from "./AssetSearch";
+import AssetLogo from "./AssetLogo";
 
 export default function AddPositionModal({ isOpen, onClose, onAdd }) {
   const [selectedAsset, setSelectedAsset] = useState(ASSET_CATALOG[0].ticker);
@@ -20,11 +22,14 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
   const [buyFx, setBuyFx] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [apiAsset, setApiAsset] = useState(null);
+  const [resolving, setResolving] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSelectAsset = (e) => {
     const val = e.target.value;
+    setApiAsset(null);
     if (val === "CUSTOM") {
       setIsCustom(true);
       setCustomTicker("");
@@ -46,6 +51,7 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (resolving || saving) return;
     const finalTicker = isCustom
       ? customTicker.trim().toUpperCase()
       : selectedAsset;
@@ -84,7 +90,7 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-xl font-bold text-white">Nueva Posición</h3>
           <button
-            disabled={saving}
+            disabled={saving || resolving}
             onClick={onClose}
             className="text-slate-400 hover:text-white p-1"
           >
@@ -94,6 +100,17 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <fieldset disabled={saving} className="space-y-4">
+            <AssetSearch disabled={saving} onResolving={setResolving} onSelect={(asset) => {
+              setApiAsset(asset); setIsCustom(false); setSelectedAsset(asset.ticker);
+              setAssetType(asset.asset_type || ASSET_CATALOG.find((a) => a.ticker === asset.ticker)?.type || "");
+              setCurrency(asset.currency); setBuyFx(""); setError("");
+            }} />
+            {apiAsset && <div className="rounded-xl border border-emerald-800 bg-emerald-950/30 p-3 text-sm">
+              <div className="flex items-center gap-3"><AssetLogo ticker={apiAsset.ticker} url={apiAsset.logo_url} /><div><strong>{apiAsset.name}</strong><p className="text-xs text-slate-400">{apiAsset.ticker} · {apiAsset.exchange} · {apiAsset.currency}</p></div></div>
+              <p className="mt-2 text-emerald-300">{apiAsset.price != null ? `Última cotización: ${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 8 }).format(apiAsset.price)} ${apiAsset.currency}` : "Cotización actual no disponible en este momento."}</p>
+              {apiAsset.quote_at && <p className="text-xs text-slate-400">Cotización del {new Date(apiAsset.quote_at).toLocaleString("es-AR")}</p>}
+              <p className="mt-1 text-xs text-slate-400">Completá abajo tu precio y fecha de compra.</p>
+            </div>}
             {/* Selector de Activos del Catálogo */}
             <div>
               <FieldLabel htmlFor="position-asset" help={HELP.asset}>
@@ -101,10 +118,12 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
               </FieldLabel>
               <select
                 id="position-asset"
-                value={isCustom ? "CUSTOM" : selectedAsset}
+                value={apiAsset ? "API" : isCustom ? "CUSTOM" : selectedAsset}
+                disabled={resolving}
                 onChange={handleSelectAsset}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white font-medium text-sm focus:outline-none focus:border-emerald-500"
               >
+                {apiAsset && <option value="API">{apiAsset.name} ({apiAsset.ticker}) — seleccionado del buscador</option>}
                 {categories.map((cat) => (
                   <optgroup
                     key={cat}
@@ -128,15 +147,15 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                   value="CUSTOM"
                   className="bg-slate-900 text-amber-300 font-semibold"
                 >
-                  ✏️ Otro activo (ingresar ticker manual...)
+                  No lo encontré: ingresar ticker manual (última opción)
                 </option>
               </select>
             </div>
 
             {/* Si eligió ingresar manualmente */}
-            {isCustom && (
+            {(isCustom || (apiAsset && !apiAsset.asset_type)) && (
               <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-700 space-y-3">
-                <div>
+                {isCustom && <div>
                   <FieldLabel htmlFor="position-ticker" help={HELP.ticker}>
                     Ticker Oficial (Yahoo Finance)
                   </FieldLabel>
@@ -149,7 +168,7 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                     required
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
                   />
-                </div>
+                </div>}
 
                 <div>
                   <FieldLabel htmlFor="position-type" help={HELP.assetType}>
@@ -157,10 +176,12 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
                   </FieldLabel>
                   <select
                     id="position-type"
+                    required
                     value={assetType}
                     onChange={(e) => setAssetType(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
                   >
+                    <option value="">Confirmá el tipo de activo</option>
                     <option value="stock">Acción</option>
                     <option value="cedear">CEDEAR</option>
                     <option value="crypto">Criptomoneda</option>
@@ -271,6 +292,7 @@ export default function AddPositionModal({ isOpen, onClose, onAdd }) {
               </button>
               <button
                 type="submit"
+                disabled={resolving}
                 className="flex-1 py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-colors shadow-lg active:scale-95"
               >
                 {saving ? "Guardando…" : "Guardar posición"}
