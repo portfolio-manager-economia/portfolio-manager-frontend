@@ -22,13 +22,15 @@ async function request(path, { authenticated = true, ...options } = {}) {
   const body = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = body?.detail;
-    throw new Error(
+    const error = new Error(
       typeof detail === "string"
         ? detail
         : Array.isArray(detail)
           ? detail.map((item) => item.msg).join("; ")
           : "No se pudo completar la operación.",
     );
+    error.definitive = response.status >= 400 && response.status < 500;
+    throw error;
   }
   return body;
 }
@@ -38,8 +40,16 @@ export const fetchDolarRates = (refresh = false) =>
   request(`/market/dolar?refresh=${refresh}`, { authenticated: false });
 export const fetchPositions = (refresh = false) =>
   request(`/positions?refresh=${refresh}`);
+export const searchAssets = (query, signal) =>
+  request(`/market/assets/search?q=${encodeURIComponent(query)}`, { signal });
+export const fetchAssetDetails = (ticker, signal) =>
+  request(`/market/assets/${encodeURIComponent(ticker)}`, { signal });
 export const createPosition = (position) =>
   request("/positions", { method: "POST", body: JSON.stringify(position) });
+export const analyzeScreenshot = (mimeType, imageBase64) =>
+  request("/import/screenshot", { method: "POST", body: JSON.stringify({ mime_type: mimeType, image_base64: imageBase64 }) });
+export const importPositions = (importId, positions) =>
+  request("/import/positions", { method: "POST", body: JSON.stringify({ import_id: importId, positions }) });
 export const deletePosition = (id) =>
   request(`/positions/${id}`, { method: "DELETE" });
 export const optimizePortfolio = (

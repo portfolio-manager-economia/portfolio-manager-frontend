@@ -61,7 +61,7 @@ function getInitials(label) {
   return (words[0] || "").slice(0, 2).toUpperCase();
 }
 
-export default function CompanyLogo({ company, ticker, name, size = 34 }) {
+export default function CompanyLogo({ company, ticker, name, url, size = 34 }) {
   const value = String(company || ticker || name || "").trim();
   if (!value) return null;
 
@@ -85,6 +85,7 @@ export default function CompanyLogo({ company, ticker, name, size = 34 }) {
   const logoUrl = slug
     ? `https://cdn.jsdelivr.net/npm/simple-icons@${version}/icons/${slug}.svg`
     : null;
+  const logoUrls = [logoUrl, url].filter(Boolean);
 
   return (
     <span
@@ -94,16 +95,18 @@ export default function CompanyLogo({ company, ticker, name, size = 34 }) {
       aria-hidden="true"
     >
       <span className="company-logo-fallback">{getInitials(displayName)}</span>
-      {logoUrl && (
+      {logoUrls.map((logoSource) => (
         <img
-          src={logoUrl}
+          key={logoSource}
+          src={logoSource}
           alt=""
           loading="lazy"
+          referrerPolicy="no-referrer"
           onError={(event) => {
             event.currentTarget.hidden = true;
           }}
         />
-      )}
+      ))}
     </span>
   );
 }

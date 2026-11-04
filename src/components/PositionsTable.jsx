@@ -18,7 +18,7 @@ const money = (value) =>
     value,
   );
 
-export default function PositionsTable({ positions, onDelete, onOpenModal }) {
+export default function PositionsTable({ positions, onDelete, onOpenModal, onImport }) {
   const complete = positions.every((p) => p.market_value != null);
   const totalCost = positions.reduce((sum, p) => sum + p.cost_basis_usd, 0);
   const totalValue = positions.reduce(
@@ -64,6 +64,7 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
           >
             + Agregar posición
           </button>
+          {onImport && <button onClick={onImport} className="mt-2 w-full border border-cyan-700 text-cyan-200 hover:bg-cyan-950 rounded-lg p-3">Importar cartera desde captura</button>}
         </div>
       </div>
       {!complete && (
@@ -109,7 +110,11 @@ export default function PositionsTable({ positions, onDelete, onOpenModal }) {
                 <tr key={p.id} className="border-t border-slate-800">
                   <td className="p-3 font-mono">
                     <div className="asset-identity">
-                      <CompanyLogo company={p.ticker} size={32} />
+                      <CompanyLogo
+                        company={p.ticker}
+                        url={p.logo_url}
+                        size={32}
+                      />
                       <div>
                         <strong>{p.ticker}</strong>
                         <div className="text-xs text-slate-400">
