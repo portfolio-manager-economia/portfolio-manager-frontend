@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   useState,
   useEffect,
   useCallback,
@@ -24,6 +24,7 @@ import PositionsTable from "./components/PositionsTable";
 import AddPositionModal from "./components/AddPositionModal";
 import CompanyLogo from "./components/CompanyLogo";
 import ImportPortfolioModal from "./components/ImportPortfolioModal";
+const TheoryPage = lazy(() => import("./components/TheoryPage"));
 const EfficientFrontierChart = lazy(
   () => import("./components/EfficientFrontierChart"),
 );
@@ -643,105 +644,9 @@ export default function App() {
 
         {/* PESTAÑA 3: TEORÍA & FORMULACIÓN MATEMÁTICA */}
         {activeTab === "theory" && (
-          <div className="theory-page max-w-4xl mx-auto space-y-6 text-slate-300 text-sm leading-relaxed">
-            <div className="theory-card bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-              <h3 className="text-xl font-bold text-white mb-3">
-                Fundamentos Teóricos: Modelo de Markowitz
-              </h3>
-              <p className="mb-4">
-                Harry Markowitz (1952) demostró que el riesgo total de una
-                cartera de inversión no es simplemente el promedio ponderado del
-                riesgo de cada activo individual, sino que depende de las{" "}
-                <span className="text-emerald-400 font-semibold">
-                  covarianzas y correlaciones
-                </span>{" "}
-                entre ellos.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-2 text-emerald-400">
-                    1. Retornos Logarítmicos
-                  </h4>
-                  <div className="font-mono bg-slate-900 p-2.5 rounded text-white text-xs mb-2">
-                    r_t = ln(P_t / P_(t-1))
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    Garantizan aditividad temporal, estabilidad numérica y
-                    simetría en variaciones porcentuales.
-                  </p>
-                </div>
-
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-2 text-cyan-400">
-                    2. Retorno y Varianza de Cartera
-                  </h4>
-                  <div className="font-mono bg-slate-900 p-2.5 rounded text-white text-xs mb-2">
-                    mu_p = w^T * mu
-                    <br />
-                    sigma_p^2 = w^T * Sigma * w
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    Donde w es el vector de ponderaciones y Sigma es la matriz
-                    de covarianza insesgada (N-1).
-                  </p>
-                </div>
-
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-2 text-amber-400">
-                    3. Ratio de Sharpe
-                  </h4>
-                  <div className="font-mono bg-slate-900 p-2.5 rounded text-white text-xs mb-2">
-                    Sharpe = (mu_p - r_f) / sigma_p
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    Premio por unidad de riesgo asumida por sobre la tasa libre
-                    de riesgo de referencia.
-                  </p>
-                </div>
-
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-2 text-purple-400">
-                    4. Factores de Anualización
-                  </h4>
-                  <div className="font-mono bg-slate-900 p-2.5 rounded text-white text-xs mb-2">
-                    k = 252 (acciones/CEDEARs)
-                    <br />
-                    k = 365 (carteras solo cripto)
-                    <br />k = 252 (mixtas: sesiones comunes)
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    mu_anual = k * mu_diario, sigma_anual = sqrt(k) *
-                    sigma_diario. En carteras mixtas los movimientos cripto del
-                    fin de semana se acumulan hasta la siguiente sesión común.
-                    Los precios en ARS se convierten con el MEP histórico de
-                    cada fecha.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-slate-950 rounded-xl border border-slate-800">
-                <h4 className="font-bold text-white text-sm mb-2">
-                  Restricciones del Optimizador (Long-Only):
-                </h4>
-                <ul className="list-disc list-inside text-xs text-slate-400 space-y-1">
-                  <li>
-                    Totalmente invertido:{" "}
-                    <code className="text-slate-200">sum(w_i) = 1.0</code>
-                  </li>
-                  <li>
-                    Sin ventas en corto:{" "}
-                    <code className="text-slate-200">w_i &gt;= 0.0</code> para
-                    todo activo i
-                  </li>
-                  <li>
-                    Tolerancia cero a datos sintéticos no verificados en el
-                    motor cuantitativo.
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <Suspense fallback={<p className="text-slate-400">Cargando fórmulas…</p>}>
+            <TheoryPage />
+          </Suspense>
         )}
       </main>
 

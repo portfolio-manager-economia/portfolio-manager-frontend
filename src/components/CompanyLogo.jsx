@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ASSET_CATALOG } from "../data/assets";
 
 const COMPANY_LOGOS = {
@@ -61,6 +62,21 @@ function getInitials(label) {
   return (words[0] || "").slice(0, 2).toUpperCase();
 }
 
+function LogoImage({ sources, initials }) {
+  const [sourceIndex, setSourceIndex] = useState(0);
+  return sources[sourceIndex] ? (
+    <img
+      src={sources[sourceIndex]}
+      alt=""
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setSourceIndex((index) => index + 1)}
+    />
+  ) : (
+    <span className="company-logo-fallback">{initials}</span>
+  );
+}
+
 export default function CompanyLogo({ company, ticker, name, url, size = 34 }) {
   const value = String(company || ticker || name || "").trim();
   if (!value) return null;
@@ -85,7 +101,7 @@ export default function CompanyLogo({ company, ticker, name, url, size = 34 }) {
   const logoUrl = slug
     ? `https://cdn.jsdelivr.net/npm/simple-icons@${version}/icons/${slug}.svg`
     : null;
-  const logoUrls = [logoUrl, url].filter(Boolean);
+  const logoUrls = [...new Set([url, logoUrl].filter(Boolean))];
 
   return (
     <span
@@ -94,19 +110,11 @@ export default function CompanyLogo({ company, ticker, name, url, size = 34 }) {
       title={displayName}
       aria-hidden="true"
     >
-      <span className="company-logo-fallback">{getInitials(displayName)}</span>
-      {logoUrls.map((logoSource) => (
-        <img
-          key={logoSource}
-          src={logoSource}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={(event) => {
-            event.currentTarget.hidden = true;
-          }}
-        />
-      ))}
+      <LogoImage
+        key={JSON.stringify([value, ...logoUrls])}
+        sources={logoUrls}
+        initials={getInitials(displayName)}
+      />
     </span>
   );
 }

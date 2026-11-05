@@ -53,9 +53,11 @@ export default function PortfolioComparison({ result }) {
                 100;
               return (
                 <tr key={ticker} className="border-t border-slate-800">
-                  <td className="ticker-identity text-left py-2 font-mono">
-                    <CompanyLogo company={ticker} size={32} />
-                    {ticker}
+                  <td className="text-left py-2 font-mono">
+                    <span className="ticker-identity">
+                      <CompanyLogo company={ticker} size={32} />
+                      {ticker}
+                    </span>
                   </td>
                   {portfolios.map((p, i) => (
                     <td key={i}>
