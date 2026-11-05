@@ -67,7 +67,7 @@ export default function AuthGate({ children }) {
 
   if (!supabase)
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-10">
+      <div className="auth-screen min-h-screen bg-slate-950 text-white p-10">
         <h1 className="text-2xl font-bold">Portfolio Manager</h1>
         <p className="mt-4">
           Falta configurar la conexión con Supabase. Seguí la guía de
@@ -77,16 +77,17 @@ export default function AuthGate({ children }) {
     );
   if (loading)
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-10">
+      <div className="auth-screen auth-loading min-h-screen bg-slate-950 text-white p-10">
         Cargando sesión…
       </div>
     );
   if (session)
     return (
       <>
-        <div className="bg-slate-900 text-slate-300 flex justify-end items-center gap-4 px-6 py-2 text-xs">
+        <div className="auth-session-bar bg-slate-900 text-slate-300 flex justify-end items-center gap-4 px-6 py-2 text-xs">
           <span>{session.user.email}</span>
           <button
+            className="auth-signout"
             onClick={async () => {
               const { error } = await supabase.auth.signOut();
               if (error) setMessage(error.message);
@@ -101,10 +102,10 @@ export default function AuthGate({ children }) {
     );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
+    <div className="auth-screen min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 space-y-5"
+      className="auth-form w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 space-y-5"
       >
         <h1 className="text-2xl font-bold">Portfolio Manager</h1>
         <p className="text-slate-400">
@@ -121,7 +122,7 @@ export default function AuthGate({ children }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="block w-full bg-slate-950 rounded-lg p-3 mt-2"
+            className="auth-control block w-full bg-slate-950 rounded-lg p-3 mt-2"
           />
         </div>
         <div>
@@ -134,7 +135,7 @@ export default function AuthGate({ children }) {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="block w-full bg-slate-950 rounded-lg p-3 mt-2"
+            className="auth-control block w-full bg-slate-950 rounded-lg p-3 mt-2"
           />
         </div>
         {message && (
@@ -144,7 +145,7 @@ export default function AuthGate({ children }) {
         )}
         <button
           disabled={busy}
-          className="w-full rounded-lg bg-emerald-600 p-3 font-semibold disabled:opacity-50"
+          className="auth-primary w-full rounded-lg bg-emerald-600 p-3 font-semibold disabled:opacity-50"
         >
           {busy ? "Procesando…" : signup ? "Crear cuenta" : "Ingresar"}
         </button>
@@ -154,7 +155,7 @@ export default function AuthGate({ children }) {
             setSignup(!signup);
             setMessage("");
           }}
-          className="text-sm text-emerald-400"
+          className="auth-switch text-sm text-emerald-400"
         >
           {signup ? "Ya tengo cuenta" : "Crear una cuenta"}
         </button>

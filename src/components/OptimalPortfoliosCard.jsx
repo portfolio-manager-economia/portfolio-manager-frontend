@@ -2,6 +2,7 @@ import React from "react";
 import { ShieldCheck, Zap } from "lucide-react";
 import HelpTooltip from "./HelpTooltip";
 import { HELP } from "../data/help";
+import CompanyLogo from "./CompanyLogo";
 
 export default function OptimalPortfoliosCard({ gmvp, tangency }) {
   if (!gmvp || !tangency) return null;
@@ -12,9 +13,12 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
       .map(([ticker, w]) => (
         <div
           key={ticker}
-          className="flex justify-between items-center text-xs py-1 border-b border-slate-700/50"
+          className="weight-row flex justify-between items-center text-xs py-1 border-b border-slate-700/50"
         >
-          <span className="font-mono text-slate-300 font-medium">{ticker}</span>
+          <span className="weight-asset-identity font-mono text-slate-300 font-medium">
+            <CompanyLogo company={ticker} size={32} />
+            {ticker}
+          </span>
           <span className="font-mono text-white font-bold">
             {(w * 100).toFixed(1)}%
           </span>
@@ -25,7 +29,7 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Portafolio de Mínima Varianza */}
-      <div className="bg-slate-800/80 p-5 rounded-xl border border-purple-500/30 shadow-lg">
+      <div className="portfolio-result-card portfolio-result-gmvp bg-slate-800/80 p-5 rounded-xl border border-purple-500/30 shadow-lg">
         <div className="flex items-center gap-2 mb-3">
           <ShieldCheck className="text-purple-400" size={22} />
           <h4 className="font-bold text-white text-base">
@@ -71,7 +75,7 @@ export default function OptimalPortfoliosCard({ gmvp, tangency }) {
       </div>
 
       {/* Portafolio de Máximo Sharpe */}
-      <div className="bg-slate-800/80 p-5 rounded-xl border border-emerald-500/30 shadow-lg">
+      <div className="portfolio-result-card portfolio-result-tangency bg-slate-800/80 p-5 rounded-xl border border-emerald-500/30 shadow-lg">
         <div className="flex items-center gap-2 mb-3">
           <Zap className="text-emerald-400" size={22} />
           <h4 className="font-bold text-white text-base">

@@ -14,7 +14,7 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl text-xs space-y-1">
+      <div className="chart-tooltip bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl text-xs space-y-1">
         {data.name && (
           <div className="font-bold text-white mb-1">{data.name}</div>
         )}
@@ -98,17 +98,17 @@ export default function EfficientFrontierChart({
     : [];
 
   return (
-    <div className="w-full h-96">
+    <div className="frontier-chart-plot w-full h-96">
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.6} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#26384d" opacity={0.7} />
           <XAxis
             type="number"
             dataKey="volatility"
             name="Volatilidad Anual"
             unit="%"
-            stroke="#94a3b8"
-            tick={{ fill: "#94a3b8", fontSize: 12 }}
+            stroke="#71839a"
+            tick={{ fill: "#91a1b5", fontSize: 11 }}
             domain={["dataMin - 2", "dataMax + 2"]}
           />
           <YAxis
@@ -116,19 +116,25 @@ export default function EfficientFrontierChart({
             dataKey="return"
             name="Retorno Esperado Anual"
             unit="%"
-            stroke="#94a3b8"
-            tick={{ fill: "#94a3b8", fontSize: 12 }}
+            stroke="#71839a"
+            tick={{ fill: "#91a1b5", fontSize: 11 }}
             domain={["dataMin - 2", "dataMax + 2"]}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+          <Legend
+            wrapperStyle={{
+              fontSize: "12px",
+              paddingTop: "12px",
+              color: "#b8c5d5",
+            }}
+          />
 
           {/* Curva de la Frontera Eficiente */}
           <Scatter
             name="Frontera Eficiente"
             data={curveData}
-            fill="#38bdf8"
-            line={{ stroke: "#38bdf8", strokeWidth: 2 }}
+            fill="#34d399"
+            line={{ stroke: "#34d399", strokeWidth: 2.5 }}
             shape="circle"
           />
 

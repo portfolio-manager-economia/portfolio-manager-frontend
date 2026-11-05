@@ -39,8 +39,8 @@ export default function DolarTicker() {
     ["Cripto", "cripto"],
   ];
   return (
-    <div className="bg-slate-900 border-b border-slate-800 text-xs py-2 px-6 flex gap-6 overflow-x-auto text-slate-300">
-      <span className="text-emerald-400 whitespace-nowrap">
+    <div className="market-ticker bg-slate-900 border-b border-slate-800 text-xs py-2 px-6 flex gap-6 overflow-x-auto text-slate-300">
+      <span className="ticker-brand text-emerald-400 whitespace-nowrap">
         Dólar · DolarAPI · consulta cada 60 s
       </span>
       {!rates && !error && <span>Cargando…</span>}
@@ -49,11 +49,11 @@ export default function DolarTicker() {
           rates?.[key] && (
             <span
               key={key}
-              className="whitespace-nowrap"
+              className="ticker-quote whitespace-nowrap"
               title={`Fecha del proveedor: ${rates[key].fechaActualizacion || "No informada"}`}
             >
               {label}: ${rates[key].venta ?? "—"}
-              <small className="text-slate-500 ml-2">
+              <small className="ticker-date text-slate-500 ml-2">
                 {rates[key].fechaActualizacion
                   ? new Date(rates[key].fechaActualizacion).toLocaleString(
                       "es-AR",
